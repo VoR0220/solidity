@@ -3164,6 +3164,110 @@ BOOST_AUTO_TEST_CASE(index_access_for_bytes)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(no_storage_in_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(string storage x = "Hello", int y) returns (bool) {
+				return true;
+			}
+			function check() {
+				string x = "Hello";
+				def("Hello", 1);
+				def(1);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multiple_function_declaration_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint x, uint y, uint z = 2) {}
+			function def(uint x, uint y) {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
+}
+
+BOOST_AUTO_TEST_CASE(default_args_calling_function)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint x = 123, string b = "Bee") returns (uint, string) {
+				return (x, b);
+			}
+			function check() {
+				var (a, y) = def();
+				(a, y) = def(12, "Anthony");
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(default_args_calling_return_statement)
+{
+	char const* text = R"(
+		contract C {
+			function def() returns (uint x = 1, string y = "blah") {}
+			function check() {
+				var (a, y) = def();
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(default_args_automatic_type_checking)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint x = 123, uint y, uint8[3] z, string zz = "lala") returns (uint, string, uint8[3]) {
+				if (x = 123)
+					return (x, zz, z);
+				return (y, zz, z);
+			}
+			function f() {
+				var (x, y, z) = def(1, [1, 2, 3], "fuhbuh");
+				(x, y, z) = def(1, 2, [1, 2, 3]);
+				(x, y, z) = def(1, [1,2,3]);
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_types_calling_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint8 x = [1, 2, 3], string foo = "bar") returns (bool) {
+				return true;
+			}
+			function wrong() {
+				def([4, 5, 6, 7], 24);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+
+BOOST_AUTO_TEST_CASE(invalid_types_in_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(string x = [1, 2, 3], int foo = "bar") returns (bool) {
+				return true;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

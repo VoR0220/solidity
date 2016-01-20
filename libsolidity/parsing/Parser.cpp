@@ -284,6 +284,7 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 		name = expectIdentifierToken();
 	VarDeclParserOptions options;
 	options.allowLocationSpecifier = true;
+	options.allowInitialValue = true;
 	ASTPointer<ParameterList> parameters(parseParameterList(options));
 	bool isDeclaredConst = false;
 	Declaration::Visibility visibility(Declaration::Visibility::Default);
@@ -1147,6 +1148,7 @@ ASTPointer<Expression> Parser::parsePrimaryExpression()
 
 vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 {
+	//TODO: Look at this
 	vector<ASTPointer<Expression>> arguments;
 	if (m_scanner->currentToken() != Token::RParen)
 	{
@@ -1162,6 +1164,7 @@ vector<ASTPointer<Expression>> Parser::parseFunctionCallListArguments()
 
 pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> Parser::parseFunctionCallArguments()
 {
+	//TODO: Look at this
 	pair<vector<ASTPointer<Expression>>, vector<ASTPointer<ASTString>>> ret;
 	Token::Value token = m_scanner->currentToken();
 	if (token == Token::LBrace)

@@ -258,6 +258,11 @@ TypeDeclarationAnnotation& EnumDefinition::annotation() const
 	return static_cast<TypeDeclarationAnnotation&>(*m_annotation);
 }
 
+/*vector<ASTPointer<VariableDeclaration>> ParameterList::defaultParameters() const
+{
+	ASTPointer
+}*/
+
 TypePointer FunctionDefinition::type() const
 {
 	return make_shared<FunctionType>(*this);
@@ -400,6 +405,7 @@ BinaryOperationAnnotation& BinaryOperation::annotation() const
 
 FunctionCallAnnotation& FunctionCall::annotation() const
 {
+	//TODO: Might need to talk with you
 	if (!m_annotation)
 		m_annotation = new FunctionCallAnnotation();
 	return static_cast<FunctionCallAnnotation&>(*m_annotation);

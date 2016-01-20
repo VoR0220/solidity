@@ -1124,6 +1124,7 @@ BOOST_AUTO_TEST_CASE(conditional_true_false_literal)
 	BOOST_CHECK(successParse(text));
 }
 
+<<<<<<< a14185a5cb60fbaccef9beefb84da90c043eecaa
 BOOST_AUTO_TEST_CASE(conditional_with_constants)
 {
 	char const* text = R"(
@@ -1173,6 +1174,28 @@ BOOST_AUTO_TEST_CASE(conditional_with_assignment)
 				uint x = 3 < 0 ? x = 3 : 6;
 				true ? x = 3 : 4;
 			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(default_args_declaration_function)
+{
+	char const* text = R"(
+		contract c {
+			function f(uint8[3] x = [1, 2, 3], uint y = 12, string foo = "bar") returns (bool) {
+				return true;
+			}
+		}
+	)";
+	BOOST_CHECK(successParse(text));
+}
+
+BOOST_AUTO_TEST_CASE(default_args_declaration_return)
+{
+	char const* text = R"(
+		contract c {
+			function f() returns (bool x = true) {}
 		}
 	)";
 	BOOST_CHECK(successParse(text));

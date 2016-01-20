@@ -179,6 +179,7 @@ struct FunctionCallAnnotation: ExpressionAnnotation
 	bool isTypeConversion = false;
 	/// Whether this is a struct constructor call.
 	bool isStructConstructorCall = false;
+	/// Might need to create a vector of TypePointers so that I can convert later
 };
 
 }
