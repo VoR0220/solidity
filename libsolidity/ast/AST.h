@@ -464,6 +464,7 @@ public:
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
 	std::vector<ASTPointer<VariableDeclaration>> const& parameters() const { return m_parameters; }
+//	std::vector<ASTPointer<VariableDeclaration>> const& defaultParameters() const;
 
 private:
 	std::vector<ASTPointer<VariableDeclaration>> m_parameters;
