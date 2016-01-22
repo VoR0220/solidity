@@ -3171,11 +3171,6 @@ BOOST_AUTO_TEST_CASE(no_storage_in_default_args)
 			function def(string storage x = "Hello", int y) returns (bool) {
 				return true;
 			}
-			function check() {
-				string x = "Hello";
-				def("Hello", 1);
-				def(1);
-			}
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
@@ -3255,6 +3250,35 @@ BOOST_AUTO_TEST_CASE(invalid_types_calling_default_args)
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
 }
 
+BOOST_AUTO_TEST_CASE(too_many_calling_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint8[3] x = [1, 2, 3], string foo = "bar") returns (bool) {
+				return true;
+			}
+			function wrong() {
+				def([4, 5, 6], "Hello", 3);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(too_few_calling_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint8[3] x = [1, 2, 3], string foo = "bar", int b) returns (bool) {
+				return true;
+			}
+			function wrong() {
+				def();
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
 
 BOOST_AUTO_TEST_CASE(invalid_types_in_default_args)
 {

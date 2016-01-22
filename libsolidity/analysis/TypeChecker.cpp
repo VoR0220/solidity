@@ -1002,12 +1002,12 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 }
 
 bool TypeChecker::isValidFunctionCall(
-	FunctionCall _functionCall, 
+	FunctionCall const& _functionCall, 
 	bool const& isPositionalCall, 
 	TypePointer const& expressionType,
-	vector<ASTPointer<Expression const>> arguments,
+	vector<ASTPointer<Expression const>> const& arguments,
 	vector<ASTPointer<ASTString>> const& argumentNames 
-) const
+)
 {
 	FunctionTypePointer functionType;
 
@@ -1037,6 +1037,7 @@ bool TypeChecker::isValidFunctionCall(
 	TypePointers parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
+		cout << "doesn't take arbitrary params" << endl;
 		string msg =
 			"Wrong argument count for function call: " +
 			toString(arguments.size()) +
@@ -1051,6 +1052,70 @@ bool TypeChecker::isValidFunctionCall(
 				msg += " " + member;
 		}
 		typeError(_functionCall.location(), msg);
+	}
+	else if 
+	(
+		functionType->minArgs() > arguments.size() || 
+		parameterTypes.size() < arguments.size()
+	)
+	{
+		string msg = 
+			"Wrong argument count for function call: Expected between " + 
+			toString(functionType->minArgs()) + " And " + toString(parameterTypes.size()) +
+			" arguments, got " + toString(arguments.size()) + ".";
+		typeError(_functionCall.location(), msg);
+	}
+	else if 
+	(
+		functionType->takesArbitraryParameters() && 
+		functionType->minArgs() < arguments.size() < parameterTypes.size()
+	)
+	{
+		cout << "am hitting right area" << endl;
+		auto const& parameterNames = functionType->parameterNames();
+		// check duplicate names
+		bool duplication = false;
+		for (size_t i = 0; i < argumentNames.size(); i++)
+		{	cout << "are we looping yet?" << endl;
+			for (size_t j = i + 1; j < argumentNames.size(); j++)
+			{
+				cout << "What actually is outputted: " << *argumentNames[i] << endl;
+				if (*argumentNames[i] == *argumentNames[j])
+				{
+					duplication = true;
+					typeError(arguments[i]->location(), "Duplicate named argument.");
+				}
+			}
+		}		
+
+		// check actual types
+		if (!duplication)
+			for (size_t i = 0; i < argumentNames.size(); i++)
+			{
+				bool found = false;
+				for (size_t j = 0; j < parameterNames.size(); j++)
+				{
+					cout << parameterNames[j] << endl;
+					found = true;
+					// check type convertible	
+					if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[j]))
+						typeError(
+							arguments[i]->location(),
+							"Invalid type for argument in function call. "
+							"Invalid implicit conversion from " +
+							type(*arguments[i])->toString() +
+							" to " +
+							parameterTypes[i]->toString() +
+							" requested."
+						);
+					break;
+				}
+				if (!found)
+					typeError(
+						_functionCall.location(),
+						"Named argument does not match function declaration."
+					);
+			}
 	}
 	else if (isPositionalCall)
 	{

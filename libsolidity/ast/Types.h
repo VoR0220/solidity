@@ -838,6 +838,8 @@ public:
 
 	/// @returns true if the ABI is used for this call (only meaningful for external calls)
 	bool isBareCall() const;
+	/// @returns minimum number of args required for a function call
+	unsigned minArgs() const { return m_minRequiredArgs; }
 	Location const& location() const { return m_location; }
 	/// @returns the external signature of this function type given the function name
 	std::string externalSignature() const;
@@ -876,13 +878,14 @@ public:
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
 
+	unsigned m_minRequiredArgs = 0;
 	TypePointers m_parameterTypes;
 	TypePointers m_returnParameterTypes;
 	std::vector<std::string> m_parameterNames;
 	std::vector<std::string> m_returnParameterNames;
 	Location const m_location;
 	/// true if the function takes an arbitrary number of arguments of arbitrary types
-	bool const m_arbitraryParameters = false;
+	bool m_arbitraryParameters = false;
 	bool const m_gasSet = false; ///< true iff the gas value to be used is on the stack
 	bool const m_valueSet = false; ///< true iff the value to be sent is on the stack
 	bool const m_bound = false; ///< true iff the function is called as arg1.fun(arg2, ..., argn)

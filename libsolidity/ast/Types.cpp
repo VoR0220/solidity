@@ -1393,10 +1393,16 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 
 	params.reserve(_function.parameters().size());
 	paramNames.reserve(_function.parameters().size());
+	m_minRequiredArgs = _function.parameters().size();
 	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
 	{
 		paramNames.push_back(var->name());
 		params.push_back(var->annotation().type);
+		if (var->isDefaultParameter())
+		{
+			m_arbitraryParameters = true;
+			--m_minRequiredArgs;
+		}
 	}
 	retParams.reserve(_function.returnParameters().size());
 	retParamNames.reserve(_function.returnParameters().size());
