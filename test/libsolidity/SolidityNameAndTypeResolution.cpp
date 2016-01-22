@@ -3244,7 +3244,7 @@ BOOST_AUTO_TEST_CASE(invalid_types_calling_default_args)
 {
 	char const* text = R"(
 		contract C {
-			function def(uint8 x = [1, 2, 3], string foo = "bar") returns (bool) {
+			function def(uint8[3] x = [1, 2, 3], string foo = "bar") returns (bool) {
 				return true;
 			}
 			function wrong() {
@@ -3266,6 +3266,61 @@ BOOST_AUTO_TEST_CASE(invalid_types_in_default_args)
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(right_hand_storage_in_default_args)
+{
+	char const* text = R"(
+		contract C {
+			string a = "Blue";
+			int x = 1;
+			function def(string b = a, int y = x) {
+				a = b;
+				x = y;
+			}
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
+BOOST_AUTO_TEST_CASE(no_left_hand_storage_in_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(string storage x = "Hello", int y) returns (bool) {
+				return true;
+			}
+			function check() {
+				string x = "Hello";
+				def("Hello", 1);
+				def(1);
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(undeclared_types_in_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(int x = x + 1, int y, int z = y) returns (bool) {
+				return true;
+			}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(multiple_function_declaration_default_args)
+{
+	char const* text = R"(
+		contract C {
+			function def(uint x, uint y, uint z = 2) {}
+			function def(uint x, uint y) {}
+		}
+	)";
+	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

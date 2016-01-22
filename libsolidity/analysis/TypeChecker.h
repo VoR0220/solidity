@@ -74,6 +74,8 @@ private:
 	void checkContractExternalTypeClashes(ContractDefinition const& _contract);
 	/// Checks that all requirements for a library are fulfilled if this is a library.
 	void checkLibraryRequirements(ContractDefinition const& _contract);
+	/// Checks for type alignment in the actual function or struct call. 
+	bool isValidFunctionCall() const;
 
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
 	virtual void endVisit(UsingForDirective const& _usingFor) override;

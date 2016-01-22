@@ -997,7 +997,18 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 
 	// Actual function call or struct constructor call.
+	return isValidFunctionCall(_functionCall, isPositionalCall, expressionType, arguments, argumentNames);
 
+}
+
+bool TypeChecker::isValidFunctionCall(
+	FunctionCall _functionCall, 
+	bool const& isPositionalCall, 
+	TypePointer const& expressionType,
+	vector<ASTPointer<Expression const>> arguments,
+	vector<ASTPointer<ASTString>> const& argumentNames 
+) const
+{
 	FunctionTypePointer functionType;
 
 	/// For error message: Struct members that were removed during conversion to memory.
