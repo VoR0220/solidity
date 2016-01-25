@@ -810,6 +810,7 @@ public:
 	TypePointers const& returnParameterTypes() const { return m_returnParameterTypes; }
 	std::vector<std::string> const& returnParameterNames() const { return m_returnParameterNames; }
 	std::vector<std::string> const returnParameterTypeNames(bool _addDataLocation) const;
+	std::map<unsigned, TypePointer> defaultParams() const { return m_defaultParams; }
 	/// @returns the "self" parameter type for a bound function
 	TypePointer selfType() const;
 
@@ -883,6 +884,7 @@ private:
 	TypePointers m_returnParameterTypes;
 	std::vector<std::string> m_parameterNames;
 	std::vector<std::string> m_returnParameterNames;
+	std::map<unsigned, TypePointer> m_defaultParams; 
 	Location const m_location;
 	/// true if the function takes an arbitrary number of arguments of arbitrary types
 	bool m_arbitraryParameters = false;

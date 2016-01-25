@@ -1390,19 +1390,22 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	vector<string> paramNames;
 	TypePointers retParams;
 	vector<string> retParamNames;
+	map<unsigned, TypePointer> defaultParams;
 
 	params.reserve(_function.parameters().size());
 	paramNames.reserve(_function.parameters().size());
 	m_minRequiredArgs = _function.parameters().size();
-	for (ASTPointer<VariableDeclaration> const& var: _function.parameters())
+	for (size_t i = 0; i < _function.parameters().size(); i++)
 	{
-		paramNames.push_back(var->name());
-		params.push_back(var->annotation().type);
-		if (var->isDefaultParameter())
+		cout << _function.parameters()[i]->name() << endl; 		
+		params.push_back(_function.parameters()[i]->annotation().type);
+		paramNames.push_back(_function.parameters()[i]->name());
+		if (_function.parameters()[i]->isDefaultParameter())
 		{
+			defaultParams.insert(pair<unsigned, TypePointer>(i, _function.parameters()[i]->annotation().type));
 			m_arbitraryParameters = true;
 			--m_minRequiredArgs;
-		}
+		}			
 	}
 	retParams.reserve(_function.returnParameters().size());
 	retParamNames.reserve(_function.returnParameters().size());
@@ -1415,6 +1418,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	swap(paramNames, m_parameterNames);
 	swap(retParams, m_returnParameterTypes);
 	swap(retParamNames, m_returnParameterNames);
+	swap(defaultParams, m_defaultParams);
 }
 
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
@@ -1687,12 +1691,27 @@ bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes, TypePoin
 
 bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
 {
-	if (m_parameterTypes.size() != _other.m_parameterTypes.size())
-		return false;
+	TypePointers thisPrunedArguments;
+	TypePointers otherPrunedArguments;
+
+	//prune for default arguments
+	for (size_t i = 0; i < m_parameterTypes.size(); i++)
+	{
+		if (defaultParams().find(i) != defaultParams().end())
+			continue;
+		thisPrunedArguments.push_back(m_parameterTypes[i]);
+	}
+	for (size_t i = 0; i < _other.m_parameterTypes.size(); i++)
+	{
+		if (_other.defaultParams().find(i) != _other.defaultParams().end())
+			continue;
+		otherPrunedArguments.push_back(_other.m_parameterTypes[i]);
+	}
+
 	return equal(
-		m_parameterTypes.cbegin(),
-		m_parameterTypes.cend(),
-		_other.m_parameterTypes.cbegin(),
+		thisPrunedArguments.cbegin(),
+		thisPrunedArguments.cend(),
+		otherPrunedArguments.cbegin(),
 		[](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; }
 	);
 }

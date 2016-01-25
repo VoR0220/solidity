@@ -997,18 +997,7 @@ bool TypeChecker::visit(FunctionCall const& _functionCall)
 	}
 
 	// Actual function call or struct constructor call.
-	return isValidFunctionCall(_functionCall, isPositionalCall, expressionType, arguments, argumentNames);
 
-}
-
-bool TypeChecker::isValidFunctionCall(
-	FunctionCall const& _functionCall, 
-	bool const& isPositionalCall, 
-	TypePointer const& expressionType,
-	vector<ASTPointer<Expression const>> const& arguments,
-	vector<ASTPointer<ASTString>> const& argumentNames 
-)
-{
 	FunctionTypePointer functionType;
 
 	/// For error message: Struct members that were removed during conversion to memory.
@@ -1037,7 +1026,6 @@ bool TypeChecker::isValidFunctionCall(
 	TypePointers parameterTypes = functionType->parameterTypes();
 	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != arguments.size())
 	{
-		cout << "doesn't take arbitrary params" << endl;
 		string msg =
 			"Wrong argument count for function call: " +
 			toString(arguments.size()) +
@@ -1068,18 +1056,17 @@ bool TypeChecker::isValidFunctionCall(
 	else if 
 	(
 		functionType->takesArbitraryParameters() && 
-		functionType->minArgs() < arguments.size() < parameterTypes.size()
+		functionType->minArgs() <= arguments.size() && 
+		parameterTypes.size() >= arguments.size()
 	)
 	{
-		cout << "am hitting right area" << endl;
 		auto const& parameterNames = functionType->parameterNames();
 		// check duplicate names
 		bool duplication = false;
 		for (size_t i = 0; i < argumentNames.size(); i++)
-		{	cout << "are we looping yet?" << endl;
+		{
 			for (size_t j = i + 1; j < argumentNames.size(); j++)
 			{
-				cout << "What actually is outputted: " << *argumentNames[i] << endl;
 				if (*argumentNames[i] == *argumentNames[j])
 				{
 					duplication = true;
@@ -1088,34 +1075,43 @@ bool TypeChecker::isValidFunctionCall(
 			}
 		}		
 
-		// check actual types
-		if (!duplication)
-			for (size_t i = 0; i < argumentNames.size(); i++)
+		auto defaultArgs = parameterTypes.size() - functionType->minArgs();
+		size_t k = 0;
+		for (size_t i = 0; i < parameterTypes.size(); i++)
+		{ 
+			bool isDefaultParam = false;
+			if (functionType->defaultParams().find(i) != functionType->defaultParams().end())
 			{
-				bool found = false;
-				for (size_t j = 0; j < parameterNames.size(); j++)
-				{
-					cout << parameterNames[j] << endl;
-					found = true;
-					// check type convertible	
-					if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[j]))
-						typeError(
-							arguments[i]->location(),
-							"Invalid type for argument in function call. "
-							"Invalid implicit conversion from " +
-							type(*arguments[i])->toString() +
-							" to " +
-							parameterTypes[i]->toString() +
-							" requested."
-						);
-					break;
-				}
-				if (!found)
-					typeError(
-						_functionCall.location(),
-						"Named argument does not match function declaration."
-					);
+				isDefaultParam = true;
+				defaultArgs--;
 			}
+
+			for (size_t j = 0 + k; j < arguments.size(); j++) 
+			{
+				// fill default param types in pair vector with 
+				// j if it's implicitly convertible, 
+				// if not, give it default value, subtract one from arg count
+				// fill non default parameters with the very first type  
+				// then pop them from the vector once done
+
+				if(isDefaultParam) {
+				}
+				else
+				{
+					k++;
+				}	
+				if (!type(*arguments[i])->isImplicitlyConvertibleTo(*parameterTypes[j]) && defaultArgs == 0)
+								typeError(
+									arguments[i]->location(),
+									"Invalid type for argument in function call. "
+									"Invalid implicit conversion from " +
+									type(*arguments[i])->toString() +
+									" to " +
+									parameterTypes[i]->toString() +
+									" requested."
+								);
+			}
+		}
 	}
 	else if (isPositionalCall)
 	{

@@ -74,14 +74,6 @@ private:
 	void checkContractExternalTypeClashes(ContractDefinition const& _contract);
 	/// Checks that all requirements for a library are fulfilled if this is a library.
 	void checkLibraryRequirements(ContractDefinition const& _contract);
-	/// Checks for type alignment in the actual function or struct call. 
-	bool isValidFunctionCall(
-		FunctionCall const& _functionCall, 
-		bool const& isPositionalCall, 
-		TypePointer const& expressionType, 
-		std::vector<ASTPointer<Expression const>> const& arguments, 
-		std::vector<ASTPointer<ASTString>> const& argumentNames
-	);
 
 	virtual void endVisit(InheritanceSpecifier const& _inheritance) override;
 	virtual void endVisit(UsingForDirective const& _usingFor) override;

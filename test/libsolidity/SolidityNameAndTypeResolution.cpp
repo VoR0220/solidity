@@ -3220,10 +3220,10 @@ BOOST_AUTO_TEST_CASE(default_args_automatic_type_checking)
 {
 	char const* text = R"(
 		contract C {
-			function def(uint x = 123, uint y, uint8[3] z, string zz = "lala") returns (uint, string, uint8[3]) {
-				if (x = 123)
-					return (x, zz, z);
-				return (y, zz, z);
+			function def(uint a = 123, uint b = 321, uint c, uint8[3] d, string e = "lala") returns (uint, string, uint8[3]) {
+				if (a == 123 && b == 321)
+					return (a, e, d);
+				return (c, e, d);
 			}
 			function f() {
 				var (x, y, z) = def(1, [1, 2, 3], "fuhbuh");
