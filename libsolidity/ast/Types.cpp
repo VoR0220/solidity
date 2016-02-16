@@ -1397,7 +1397,7 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 	m_minRequiredArgs = _function.parameters().size();
 	for (size_t i = 0; i < _function.parameters().size(); i++)
 	{
-		cout << _function.parameters()[i]->name() << endl; 		
+		//cout << _function.parameters()[i]->name() << endl; 		
 		params.push_back(_function.parameters()[i]->annotation().type);
 		paramNames.push_back(_function.parameters()[i]->name());
 		if (_function.parameters()[i]->isDefaultParameter())

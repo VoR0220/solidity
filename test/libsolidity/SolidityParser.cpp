@@ -1124,7 +1124,6 @@ BOOST_AUTO_TEST_CASE(conditional_true_false_literal)
 	BOOST_CHECK(successParse(text));
 }
 
-<<<<<<< a14185a5cb60fbaccef9beefb84da90c043eecaa
 BOOST_AUTO_TEST_CASE(conditional_with_constants)
 {
 	char const* text = R"(

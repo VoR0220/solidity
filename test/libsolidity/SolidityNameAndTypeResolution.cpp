@@ -3164,7 +3164,7 @@ BOOST_AUTO_TEST_CASE(index_access_for_bytes)
 	BOOST_CHECK(success(text));
 }
 
-BOOST_AUTO_TEST_CASE(no_storage_in_default_args)
+BOOST_AUTO_TEST_CASE(no_storage_modifier_in_default_args)
 {
 	char const* text = R"(
 		contract C {
@@ -3174,17 +3174,6 @@ BOOST_AUTO_TEST_CASE(no_storage_in_default_args)
 		}
 	)";
 	BOOST_CHECK(expectError(text) == Error::Type::TypeError);
-}
-
-BOOST_AUTO_TEST_CASE(multiple_function_declaration_default_args)
-{
-	char const* text = R"(
-		contract C {
-			function def(uint x, uint y, uint z = 2) {}
-			function def(uint x, uint y) {}
-		}
-	)";
-	BOOST_CHECK(expectError(text) == Error::Type::DeclarationError);
 }
 
 BOOST_AUTO_TEST_CASE(default_args_calling_function)
