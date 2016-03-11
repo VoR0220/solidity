@@ -3347,6 +3347,17 @@ BOOST_AUTO_TEST_CASE(inline_array_fixed_literals)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(zero_and_eight_variants_fixed)
+{
+	char const* text = R"(
+		contract A {
+			fixed8x0 someInt = 4;
+			fixed0x8 half = 0.5;
+		}
+	)";
+	BOOST_CHECK(success(text));
+}
+
 BOOST_AUTO_TEST_CASE(size_capabilities_of_fixed_point_types)
 {
 	char const* text = R"(
