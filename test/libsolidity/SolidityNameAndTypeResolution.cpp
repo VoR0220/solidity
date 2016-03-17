@@ -3211,6 +3211,20 @@ BOOST_AUTO_TEST_CASE(int10abc_is_identifier)
 	BOOST_CHECK(success(text));
 }
 
+BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
+{
+	char const* text = R"(
+		library L { function l() {} }
+		contract test {
+			function f() {
+				L.l.value;
+			}
+		}
+	)";
+	BOOST_CHECK(!success(text));
+}
+
+
 BOOST_AUTO_TEST_CASE(invalid_fixed_types)
 {
 	char const* text = R"(
@@ -3268,33 +3282,6 @@ BOOST_AUTO_TEST_CASE(valid_fixed_types)
 	)";
 
 	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(bit_shift_fixed_types)
-{
-	char const* text = R"(
-		contract test {
-			function f(){
-				fixed phi = (1 + 5**(.5))/2;
-				fixed shift = (phi >> 2);
-			}
-		}
-	)";
-
-	BOOST_CHECK(success(text));
-}
-
-BOOST_AUTO_TEST_CASE(library_functions_do_not_have_value)
-{
-	char const* text = R"(
-		library L { function l() {} }
-		contract test {
-			function f() {
-				L.l.value;
-			}
-		}
-	)";
-	BOOST_CHECK(!success(text));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_int_conversion)
