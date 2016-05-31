@@ -307,6 +307,7 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 		break;
 	case Token::Inc: // ++ (pre- or postfix)
 	case Token::Dec: // -- (pre- or postfix)
+	{
 		solAssert(!!m_currentLValue, "LValue not retrieved.");
 		m_currentLValue->retrieveValue(_unaryOperation.location());
 		if (!_unaryOperation.isPrefixOperation())
@@ -318,7 +319,16 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 				for (unsigned i = 1 + m_currentLValue->sizeOnStack(); i > 0; --i)
 					m_context << swapInstruction(i);
 		}
-		m_context << u256(1);
+
+		u256 oneValue;
+		if (_unaryOperation.annotation().type->category() == Type::Category::FixedPoint)
+		{
+			FixedPointType const& fixedType = dynamic_cast<FixedPointType const&>(*_unaryOperation.subExpression().annotation().type);
+			oneValue = u256(1) << fixedType.fractionalBits();
+		}	
+		else
+			oneValue = u256(1);
+		m_context << oneValue;
 		if (_unaryOperation.getOperator() == Token::Inc)
 			m_context << Instruction::ADD;
 		else
@@ -329,9 +339,11 @@ bool ExpressionCompiler::visit(UnaryOperation const& _unaryOperation)
 			m_context << swapInstruction(i);
 		m_currentLValue->storeValue(
 			*_unaryOperation.annotation().type, _unaryOperation.location(),
-			!_unaryOperation.isPrefixOperation());
+			!_unaryOperation.isPrefixOperation()
+		);
 		m_currentLValue.reset();
 		break;
+	}
 	case Token::Add: // +
 		// unary add, so basically no-op
 		break;
@@ -363,7 +375,10 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		bool cleanupNeeded = false;
 		if (Token::isCompareOp(c_op))
 			cleanupNeeded = true;
-		if (commonType.category() == Type::Category::Integer && (c_op == Token::Div || c_op == Token::Mod))
+		if (
+			(commonType.category() == Type::Category::Integer || commonType.category() == Type::Category::FixedPoint) &&
+			(c_op == Token::Div || c_op == Token::Mod)
+		)
 			cleanupNeeded = true;
 
 		// for commutative operators, push the literal as late as possible to allow improved optimization
@@ -1231,7 +1246,7 @@ void ExpressionCompiler::endVisit(Literal const& _literal)
 	case Type::Category::StringLiteral:
 		break; // will be done during conversion
 	default:
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
+		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, rational, boolean and string literals implemented for now."));
 	}
 }
 
@@ -1262,6 +1277,8 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	{
 		bool isSigned = false;
 		if (auto type = dynamic_cast<IntegerType const*>(&_type))
+			isSigned = type->isSigned();
+		else if (auto type = dynamic_cast<FixedPointType const*>(&_type))
 			isSigned = type->isSigned();
 
 		switch (_operator)
@@ -1302,11 +1319,23 @@ void ExpressionCompiler::appendOrdinaryBinaryOperatorCode(Token::Value _operator
 
 void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Type const& _type)
 {
-	IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-	bool const c_isSigned = type.isSigned();
+	bool c_isSigned;
+	bool c_isFractional;
+	if (_type.category() == Type::Category::Integer)
+	{
+		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
+		c_isSigned = type.isSigned();
+		c_isFractional = false;
+	}
+	else if (_type.category() == Type::Category::FixedPoint)
+	{
+		FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
+		c_isSigned = type.isSigned();		
+		c_isFractional = true;
+		cout << "Fractional bits: " << type.fractionalBits() << endl;
+		cout << "Integer bits: " << type.integerBits() << endl;
+	}
 
-	if (_type.category() == Type::Category::FixedPoint)
-		solAssert(false, "Not yet implemented - FixedPointType.");
 
 	switch (_operator)
 	{
