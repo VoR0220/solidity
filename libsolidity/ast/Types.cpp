@@ -749,7 +749,6 @@ u256 RationalNumberType::literalValue(Literal const*) const
 		value = u256(shiftedValue);
 	else
 		value = s2u(s256(shiftedValue));
-	cout << "U256: " << value << endl;
 	return value;
 }
 

@@ -24,6 +24,7 @@
 
 #include <string>
 #include <tuple>
+#include <boost/rational.hpp>
 #include "../TestHelper.h"
 #include <libethcore/ABI.h>
 #include <libethcore/SealEngine.h>
@@ -42,6 +43,8 @@ namespace solidity
 {
 namespace test
 {
+
+using rational = boost::rational<dev::bigint>;
 
 class ExecutionFramework
 {
@@ -144,6 +147,11 @@ public:
 	{
 		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
 		return _padLeft ? padding + _value : _value + padding;
+	}
+	static bytes encode(rational const& _value, unsigned int _fixedBits)
+	{
+		rational value = 0x100 * _value * (_fixedBits/8);
+		return encode(u256(value.numerator()/value.denominator()));
 	}
 	static bytes encode(std::string const& _value) { return encode(asBytes(_value), false); }
 	template <class _T>
