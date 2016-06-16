@@ -6856,7 +6856,6 @@ BOOST_AUTO_TEST_CASE(fixed_type_explicit_conversion_shifting)
 	char const* sourceCode = R"(
 		contract Test {
 			function A() returns (fixed a) {
-				//a = fixed(0.9999999999990905052982270717620849609375);
 				a = fixed(1/3);
 			}
 			function B() returns (fixed0x248 b) {
@@ -6916,7 +6915,12 @@ BOOST_AUTO_TEST_CASE(fixed_type_arguments)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	//BOOST_CHECK();
+	rational a = rational(dev::bigint(1),dev::bigint(3));
+	rational b = rational(dev::bigint(1),dev::bigint(2));
+	std::cout << b << endl;
+	std::cout << fixed(b,128) << std::endl;
+	std::cout << callContractFunction("f(fixed,fixed)", fixed(a,128), fixed(b,128)) << std::endl;
+	BOOST_CHECK(callContractFunction("f(fixed,fixed)", fixed(a,128), fixed(b,128)) == encodeArgs(fixed(a,128), fixed(b,128)));
 }
 
 BOOST_AUTO_TEST_CASE(int_to_fixed_type)
@@ -7012,6 +7016,11 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 				ufixed b = 2.25;
 				return (a * b);
 			}
+			function med() returns (ufixed24x184) {
+				ufixed8x160 a = ufixed8x160(8) + ufixed8x160(1/3);
+				ufixed24x184 b = 345.8316620884578469485859386622905731201171875;
+				return a * b;
+			}
 			function small() returns (ufixed16x8) {
 				ufixed0x8 a = 0.5;
 				ufixed16x8 b = 35.4609375;
@@ -7021,6 +7030,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	std::cout << "Calling fixed type multiply: " << callContractFunction("full()") << std::endl;
+	std::cout << "Calling fixed type multiply: " << callContractFunction("med()") << std::endl;
 	std::cout << "Calling fixed type multiply: " << callContractFunction("small()") << std::endl;
 	//BOOST_CHECK();
 }

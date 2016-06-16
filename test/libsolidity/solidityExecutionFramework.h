@@ -173,10 +173,21 @@ public:
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
-	static u256 fixed(rational const& _value, unsigned int _fixedBits)
+	static u256 fixed(rational const& _value, int _fixedBits)
 	{
-		rational value = 0x100 * _value * (_fixedBits/8);
-		return u256(value.numerator()/value.denominator());
+		rational maxValue = (_value < 0) ? 		
+			rational(bigint(1) << 255, 1):
+			rational((bigint(1) << 256) - 1, 1);
+		unsigned convertingBits = 0;
+		rational value = _value;
+		while (value * 0x100 <= maxValue && value.denominator() != 1 && convertingBits < 256)
+		{
+			value *= 0x100;
+			convertingBits += 8;
+		}
+		rational finalValue = _value * (bigint(1) << convertingBits);
+		finalValue *= boost::multiprecision::pow(bigint(10), (_fixedBits/32));
+		return u256(finalValue.numerator()/finalValue.denominator());
 	}
 
 	class ContractInterface
