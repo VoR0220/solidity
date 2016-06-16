@@ -6923,13 +6923,14 @@ BOOST_AUTO_TEST_CASE(int_to_fixed_type)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f(uint128 a) returns (ufixed b) {
+			function f() returns (ufixed b) {
+				uint128 a = 3;
 				b = a;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Caling contract fixed type multi return: " << callContractFunction("f(uint128)", fromHex("3")) << std::endl;
+	std::cout << "Caling contract fixed type multi return: " << callContractFunction("f()"/*"f(uint128)", byte(0x3)*/) << std::endl;
 	//BOOST_CHECK();
 }
 

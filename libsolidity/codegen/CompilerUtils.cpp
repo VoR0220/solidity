@@ -375,7 +375,7 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			{
 				if (targetFixedPointType.integerBits() > intType->numBits())
 					cleanHigherOrderBits(*intType);
-				u256 shiftFactor = u256(256) << (targetFixedPointType.fractionalBits() - 8);
+				u256 shiftFactor = u256(1) << (targetFixedPointType.fractionalBits());
 				m_context << shiftFactor << Instruction::MUL;
 			}
 			else if (auto rationalType = dynamic_cast<RationalNumberType const*>(&_typeOnStack))
