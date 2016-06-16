@@ -373,6 +373,7 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 	else
 	{
 		bool cleanupNeeded = false;
+
 		if (Token::isCompareOp(c_op))
 			cleanupNeeded = true;
 		if (
@@ -1321,6 +1322,8 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 {
 	bool c_isSigned;
 	bool c_isFractional;
+	u256 c_shift = u256(1);
+
 	if (_type.category() == Type::Category::Integer)
 	{
 		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
@@ -1332,6 +1335,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		FixedPointType const& type = dynamic_cast<FixedPointType const&>(_type);
 		c_isSigned = type.isSigned();		
 		c_isFractional = true;
+		c_shift = (u256(1) << (type.fractionalBits()));
 		cout << "Fractional bits: " << type.fractionalBits() << endl;
 		cout << "Integer bits: " << type.integerBits() << endl;
 	}
@@ -1346,7 +1350,19 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		m_context << Instruction::SUB;
 		break;
 	case Token::Mul:
-		m_context << Instruction::MUL;
+		if (c_isFractional)
+		{
+			//multiply, then shift right...this is your fraction.
+			m_context << Instruction::MUL << c_shift << Instruction::SWAP1 << Instruction::DIV;
+			//now redo the process...
+			m_context << Instruction::DUP2 << Instruction::DUP4;
+			//but this time, get the integer portion.
+			m_context << c_shift << Instruction::SWAP1 << Instruction::DIV << Instruction::MUL;
+			//add
+			m_context << Instruction::ADD;
+		}
+		else
+			m_context << Instruction::MUL;
 		break;
 	case Token::Div:
 		m_context  << (c_isSigned ? Instruction::SDIV : Instruction::DIV);

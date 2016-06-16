@@ -7006,12 +7006,11 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function norm() returns (ufixed) {
+			function full() returns (ufixed) {
 				ufixed a = 55.5;
 				ufixed b = 2.25;
 				return (a * b);
 			}
-
 			function small() returns (ufixed16x8) {
 				ufixed0x8 a = 0.5;
 				ufixed16x8 b = 35.4609375;
@@ -7020,8 +7019,8 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling fixed type addition: " << callContractFunction("norm()") << std::endl;
-	std::cout << "Calling fixed type addition: " << callContractFunction("small()") << std::endl;
+	std::cout << "Calling fixed type multiply: " << callContractFunction("full()") << std::endl;
+	std::cout << "Calling fixed type multiply: " << callContractFunction("small()") << std::endl;
 	//BOOST_CHECK();
 }
 
