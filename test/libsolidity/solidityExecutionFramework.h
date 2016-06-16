@@ -148,11 +148,6 @@ public:
 		bytes padding = bytes((32 - _value.size() % 32) % 32, 0);
 		return _padLeft ? padding + _value : _value + padding;
 	}
-	static bytes encode(rational const& _value, unsigned int _fixedBits)
-	{
-		rational value = 0x100 * _value * (_fixedBits/8);
-		return encode(u256(value.numerator()/value.denominator()));
-	}
 	static bytes encode(std::string const& _value) { return encode(asBytes(_value), false); }
 	template <class _T>
 	static bytes encode(std::vector<_T> const& _value)
@@ -177,6 +172,11 @@ public:
 	static bytes encodeDyn(Arg const& _arg)
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
+	}
+	static u256 fixed(rational const& _value, unsigned int _fixedBits)
+	{
+		rational value = 0x100 * _value * (_fixedBits/8);
+		return u256(value.numerator()/value.denominator());
 	}
 
 	class ContractInterface
