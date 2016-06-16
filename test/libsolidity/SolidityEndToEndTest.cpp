@@ -7030,13 +7030,14 @@ BOOST_AUTO_TEST_CASE(fixed_type_division)
 	char const* sourceCode = R"(
 		contract C {
 			function f() returns (fixed) {
-				fixed a = fixed(42.654);
+				fixed a = 42.125;
 				fixed b = 0.5;
 				return (a / b);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
+	std::cout << "Calling fixed type divide: " << callContractFunction("f()") << std::endl;
 	//BOOST_CHECK();
 }
 
@@ -7044,14 +7045,14 @@ BOOST_AUTO_TEST_CASE(fixed_type_modulus)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (fixed) {
-				fixed a = 0.42578125 % -0.4271087646484375;
-				fixed b = .5 % a;
-				return b;
+			function f() returns (ufixed) {
+				ufixed a = 2 % 1.25;
+				return a;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
+	std::cout << callContractFunction("f()") << std::endl;
 	//BOOST_CHECK();
 }
 

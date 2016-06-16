@@ -1367,16 +1367,17 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	case Token::Div:
 		if (c_isFractional)
 		{
-			//multiply, then shift right...this is your fraction.
-			m_context << Instruction::MUL << c_shift << Instruction::SWAP1 << Instruction::DIV;
+			//divide, then shift left...this is your integer.
+			m_context << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << c_shift << Instruction::MUL;
 			//now redo the process...
 			m_context << Instruction::DUP2 << Instruction::DUP4;
-			//but this time, get the integer portion.
-			m_context << c_shift << Instruction::SWAP1 << Instruction::DIV << Instruction::MUL;
+			//but this time, get the fraction portion.
+			m_context << c_shift << Instruction::SWAP1 << Instruction::MUL << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 			//add
 			m_context << Instruction::ADD;
 		}
-		m_context  << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+		else
+			m_context  << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 		break;
 	case Token::Mod:
 		m_context << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
