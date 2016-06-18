@@ -175,19 +175,8 @@ public:
 	}
 	static u256 fixed(rational const& _value, int _fixedBits)
 	{
-		rational maxValue = (_value < 0) ? 		
-			rational(bigint(1) << 255, 1):
-			rational((bigint(1) << 256) - 1, 1);
-		unsigned convertingBits = 0;
-		rational value = _value;
-		while (value * 0x100 <= maxValue && value.denominator() != 1 && convertingBits < 256)
-		{
-			value *= 0x100;
-			convertingBits += 8;
-		}
-		rational finalValue = _value * (bigint(1) << convertingBits);
-		finalValue *= boost::multiprecision::pow(bigint(10), (_fixedBits/32));
-		return u256(finalValue.numerator()/finalValue.denominator());
+		rational value = _value * boost::multiprecision::pow(bigint(2), _fixedBits);
+		return u256(value.numerator()/value.denominator());
 	}
 
 	class ContractInterface

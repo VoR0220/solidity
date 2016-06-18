@@ -7016,9 +7016,20 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 				ufixed b = 2.25;
 				return (a * b);
 			}
-			function med() returns (ufixed24x184) {
-				ufixed8x160 a = ufixed8x160(8) + ufixed8x160(1/3);
-				ufixed24x184 b = 345.8316620884578469485859386622905731201171875;
+			function fullFractionSide() returns (ufixed0x256) {
+				ufixed0x256 a = ufixed0x256(1/3);
+				ufixed0x248 b = ufixed0x248(2/3);
+				return a * b;
+			}
+			function largerFractionSide() returns (ufixed24x184) {
+				ufixed8x160 a = ufixed8x160(8 + 1/3);
+				ufixed24x184 b = 3.5;
+				//ufixed24x184 c = ufixed24x184(a);
+				return a * b;
+			}
+			function largerIntSide() returns (ufixed184x24) {
+				ufixed184x24 a = 3000.125;
+				ufixed176x16 b = 2000.5;
 				return a * b;
 			}
 			function small() returns (ufixed16x8) {
@@ -7030,7 +7041,9 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 	)";
 	compileAndRun(sourceCode, 0, "C");
 	std::cout << "Calling fixed type multiply: " << callContractFunction("full()") << std::endl;
-	std::cout << "Calling fixed type multiply: " << callContractFunction("med()") << std::endl;
+	std::cout << "Calling fixed type multiply: " << callContractFunction("fullFractionSide()") << std::endl;
+	std::cout << "Calling fixed type multiply: " << callContractFunction("largerFractionSide()") << std::endl;
+	std::cout << "Calling fixed type multiply: " << callContractFunction("largerIntSide()") << std::endl;
 	std::cout << "Calling fixed type multiply: " << callContractFunction("small()") << std::endl;
 	//BOOST_CHECK();
 }
