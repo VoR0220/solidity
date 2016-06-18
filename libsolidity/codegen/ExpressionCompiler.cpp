@@ -1373,7 +1373,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				//D*B/shift + C*A*shift + D*A + C*B 
 
 				//D*B/shift				
-				/*m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
+				m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 				m_context << Instruction::SWAP1 << c_fractionShift <<  Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 				if (c_fractionalBits - c_numBits < 0)
 				{
@@ -1383,10 +1383,10 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				else
 					m_context << Instruction::MUL << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 				//C*A*shift*/
-				//m_context << Instruction::DUP2 << Instruction::DUP4;
+				m_context << Instruction::DUP2 << Instruction::DUP4;
 				m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 				m_context << Instruction::SWAP1 << c_fractionShift <<  Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
-				m_context << Instruction::MUL << c_fractionShift << Instruction::MUL; //<< Instruction::ADD;
+				m_context << Instruction::MUL << c_fractionShift << Instruction::MUL << Instruction::ADD;
 				//D*A
 				m_context << Instruction::DUP2 << Instruction::DUP4;
 				m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);		
