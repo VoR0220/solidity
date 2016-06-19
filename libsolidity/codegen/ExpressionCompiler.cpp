@@ -377,8 +377,9 @@ bool ExpressionCompiler::visit(BinaryOperation const& _binaryOperation)
 		if (Token::isCompareOp(c_op))
 			cleanupNeeded = true;
 		if (
-			(commonType.category() == Type::Category::Integer || commonType.category() == Type::Category::FixedPoint) &&
-			(c_op == Token::Div || c_op == Token::Mod)
+			(commonType.category() == Type::Category::Integer &&
+			(c_op == Token::Div || c_op == Token::Mod)) ||
+			commonType.category() == Type::Category::FixedPoint
 		)
 			cleanupNeeded = true;
 
@@ -1326,6 +1327,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 	u256 c_halfShift = u256(1);
 	int c_fractionalBits = 0;
 	int c_numBits = 0;
+	int c_intBits = 0;
 
 	if (_type.category() == Type::Category::Integer)
 	{
@@ -1339,6 +1341,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		c_isSigned = type.isSigned();		
 		c_isFractional = true;
 		c_fractionalBits = type.fractionalBits();
+		c_intBits = type.integerBits();
 		c_numBits = type.numBits();
 		c_fractionShift = (u256(1) << (c_fractionalBits));
 		c_halfShift = (u256(1) << (c_fractionalBits / 2));
@@ -1371,12 +1374,13 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				//this takes the form A.B * C.D
 				//then we utilize this formula:
 				//D*B/shift + C*A*shift + D*A + C*B 
-
+				
 				//D*B/shift				
 				m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 				m_context << Instruction::SWAP1 << c_fractionShift <<  Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
-				if (c_fractionalBits - c_numBits < 0)
+				if (c_fractionalBits > c_intBits)
 				{
+					//we need this here because overwise we will have an overflow with our fractional bits
 					m_context << c_halfShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 					m_context << Instruction::SWAP1 << c_halfShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
 				}

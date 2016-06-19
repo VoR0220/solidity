@@ -391,7 +391,15 @@ void CompilerUtils::convertType(Type const& _typeOnStack, Type const& _targetTyp
 			}
 			else 
 			{
-				fixedPointShifting(dynamic_cast<FixedPointType const&>(_typeOnStack), targetFixedPointType);
+				FixedPointType const& stackFixedType = dynamic_cast<FixedPointType const&>(_typeOnStack);
+				if (
+					targetFixedPointType.integerBits() > stackFixedType.integerBits() || 
+					targetFixedPointType.fractionalBits() > stackFixedType.fractionalBits()
+				)
+					cleanHigherOrderBits(stackFixedType);
+				else if (_cleanupNeeded)
+					cleanHigherOrderBits(targetFixedPointType);
+				fixedPointShifting(stackFixedType, targetFixedPointType);
 			}
 		}
 		else

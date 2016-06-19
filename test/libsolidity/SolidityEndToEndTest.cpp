@@ -7021,15 +7021,15 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 				ufixed0x248 b = ufixed0x248(2/3);
 				return a * b;
 			}
-			function largerFractionSide() returns (ufixed24x184) {
-				ufixed24x184 a = ufixed24x184(8 + 1/3);
+			function largerFractionSide() returns (ufixed32x184) {
+				ufixed32x184 a = ufixed24x184(8 + 1/3);
 				ufixed24x184 b = 3.5;
 				//ufixed24x184 c = ufixed24x184(a);
 				return a * b;
 			}
-			function largerIntSide() returns (ufixed184x24) {
+			function largerIntSide() returns (ufixed184x32) {
 				ufixed184x24 a = 3000.125;
-				ufixed184x24 b = 2000.5;
+				ufixed184x32 b = 2000.5;
 				return a * b;
 			}
 			function small() returns (ufixed16x8) {
