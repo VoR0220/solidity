@@ -1363,12 +1363,15 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		{
 			if (c_numBits - c_fractionalBits == 0)
 			{
-				//take two numbers, cut them in halve, multiply them, simple as that.
+				//take two numbers, cut them in half, multiply them, simple as that.
 				m_context << c_halfShift << Instruction::DUP1 << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV); 
 				m_context << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
 			}
 			else if (c_numBits > 128)
 			{
+				//duplicate converted types for reusage
+				m_context << Instruction::DUP1 << Instruction::DUP3;
+				
 				//time to get schwifty in here...
 				//split both numbers into their representative fractional and decimal parts
 				//this takes the form A.B * C.D
@@ -1397,8 +1400,7 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 				m_context << Instruction::SWAP1 << c_fractionShift <<  Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 				m_context << Instruction::MUL << Instruction::ADD;
 				//C*B
-				m_context << Instruction::DUP2 << Instruction::DUP4;
-				m_context << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
+				m_context << Instruction::SWAP2 << c_fractionShift << Instruction::SWAP1 << (c_isSigned ? Instruction::SDIV : Instruction::DIV);
 				m_context << Instruction::SWAP1 << c_fractionShift <<  Instruction::SWAP1 << (c_isSigned ? Instruction::SMOD : Instruction::MOD);
 				m_context << Instruction::MUL << Instruction::ADD;
 			}
