@@ -1363,9 +1363,11 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 		{
 			if (c_numBits - c_fractionalBits == 0)
 			{
+				//m_context << Instruction::DUP1 << Instruction::DUP2;
 				//take two numbers, cut them in half, multiply them, simple as that.
-				m_context << c_halfShift << Instruction::DUP1 << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV); 
-				m_context << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				//m_context << c_halfShift << Instruction::DUP1 << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV); 
+				//m_context << Instruction::SWAP2 << (c_isSigned ? Instruction::SDIV : Instruction::DIV) << Instruction::MUL;
+				m_context << Instruction::MUL;
 			}
 			else if (c_numBits > 128)
 			{

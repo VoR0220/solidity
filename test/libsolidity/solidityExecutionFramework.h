@@ -94,6 +94,7 @@ public:
 	bytes const& callContractFunctionWithValue(std::string _sig, u256 const& _value, Args const&... _arguments)
 	{
 		FixedHash<4> hash(dev::sha3(_sig));
+		//std::cout << hash.asBytes() + encodeArgs(_arguments...) << std::endl;
 		sendMessage(hash.asBytes() + encodeArgs(_arguments...), false, _value);
 		return m_output;
 	}
@@ -173,8 +174,9 @@ public:
 	{
 		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
-	static u256 fixed(rational const& _value, int _fixedBits)
+	static u256 fixed(int _numerator, int _denominator, int _fixedBits)
 	{
+		rational _value = rational(dev::bigint(_numerator), dev::bigint(_denominator));
 		rational value = _value * boost::multiprecision::pow(bigint(2), _fixedBits);
 		return u256(value.numerator()/value.denominator());
 	}
@@ -273,6 +275,7 @@ protected:
 				eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec()) :
 				eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
 		bytes transactionRLP = t.rlp();
+		//std::cout << transactionRLP << std::endl;
 		try
 		{
 			// this will throw since the transaction is invalid, but it should nevertheless store the transaction
@@ -292,10 +295,11 @@ protected:
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
 			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
 		}
-		BOOST_REQUIRE(executive.go(/* DEBUG eth::Executive::simpleTrace() */));
+		BOOST_REQUIRE(executive.go( /*DEBUG*/ eth::Executive::simpleTrace()));
 		m_state.noteSending(m_sender);
 		executive.finalize();
 		m_gasUsed = res.gasUsed;
+		//std::cout << m_gasUsed << std::endl;
 		m_output = std::move(res.output);
 		m_logs = executive.logs();
 	}

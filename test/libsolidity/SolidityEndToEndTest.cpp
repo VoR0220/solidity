@@ -83,6 +83,7 @@ BOOST_AUTO_TEST_CASE(exp_operator_const_signed)
 			function f() returns(int d) { return (-2) ** 3; }
 		})";
 	compileAndRun(sourceCode);
+	std::cout << callContractFunction("f()", bytes()) << endl;
 	BOOST_CHECK(callContractFunction("f()", bytes()) == toBigEndian(u256(-8)));
 }
 
@@ -220,6 +221,7 @@ BOOST_AUTO_TEST_CASE(conditional_expression_different_types)
 		}
 	)";
 	compileAndRun(sourceCode);
+	std::cout << encodeArgs(u256(0xcd)) << std::endl;
 	BOOST_CHECK(callContractFunction("f(bool)", true) == encodeArgs(u256(0xcd)));
 	BOOST_CHECK(callContractFunction("f(bool)", false) == encodeArgs(u256(0xabab)));
 }
@@ -6847,8 +6849,7 @@ BOOST_AUTO_TEST_CASE(const_fixed_type_return)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling contract fixed type constant: " << callContractFunction("a()") << std::endl;
-	//BOOST_CHECK(callContractFunction("a()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("a()") == encodeArgs(fixed(7,2,128)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_explicit_conversion_shifting)
@@ -6864,18 +6865,17 @@ BOOST_AUTO_TEST_CASE(fixed_type_explicit_conversion_shifting)
 			function C() returns (fixed248x8 c) {
 				c = fixed248x8(1/3);
 			}
-			function D() returns (fixed0x256 d) {
-				d = fixed0x256(0.5);
+			function D() returns (fixed8x248 d) {
+				d = fixed8x248(-0.125);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "Test");
-	std::cout << "Caling contract fixed type return: " << callContractFunction("A()") << std::endl;
-	std::cout << "Caling contract fixed type return: " << callContractFunction("B()") << std::endl;
-	std::cout << "Caling contract fixed type return: " << callContractFunction("C()") << std::endl;
-	std::cout << "Caling contract fixed type return: " << callContractFunction("D()") << std::endl;
-	//std::cout << "Caling contract int type return: " << callContractFunction("h()") << std::endl;
-	//BOOST_CHECK(callContractFunction("a()") == encodeArgs(0));
+
+	BOOST_CHECK(callContractFunction("A()") == encodeArgs(fixed(1, 3, 128)));
+	BOOST_CHECK(callContractFunction("B()") == encodeArgs(fixed(1, 3, 248)));
+	BOOST_CHECK(callContractFunction("C()") == encodeArgs(fixed(1, 3, 8)));
+	BOOST_CHECK(callContractFunction("D()") == encodeArgs(fixed(-1, 8, 248)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_function_multi_return)
@@ -6888,8 +6888,13 @@ BOOST_AUTO_TEST_CASE(fixed_type_function_multi_return)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Caling contract fixed type multi return: " << callContractFunction("f()") << std::endl;
-	//BOOST_CHECK(callContractFunction("a()") == encodeArgs(0));
+	BOOST_CHECK(
+		callContractFunction("f()") == encodeArgs(
+			fixed(651, 2, 128), 
+			fixed(1801, 4, 128), 
+			fixed(382784479, 16, 128)
+		)
+	);
 }
 
 BOOST_AUTO_TEST_CASE(negative_exponent)
@@ -6902,40 +6907,54 @@ BOOST_AUTO_TEST_CASE(negative_exponent)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	//BOOST_CHECK(callContractFunction("a()") == encodeArgs(0));
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(1, 32, 128)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_arguments)
 {
 	char const* sourceCode = R"(
-		contract C {
-			function f(fixed a, fixed b) returns (fixed, fixed) {
+		contract B {
+			function callFixed(fixed a, fixed b) constant returns (fixed, fixed) {
 				return (a, b);
 			}
 		}
+
+		contract C {
+			B b = new B();
+			function f(fixed a, fixed b) returns (fixed, fixed) {
+				return (a, b);
+			}
+
+			function callFmem() returns (fixed a, fixed b) {
+				(a, b) = f(.25, .5);
+			}
+
+			function callDataloadB() returns (fixed a) {
+				(a, ) = b.callFixed(.5, .25);
+			}
+		}
+
+
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	rational a = rational(dev::bigint(1),dev::bigint(3));
-	rational b = rational(dev::bigint(1),dev::bigint(2));
-	std::cout << b << endl;
-	std::cout << fixed(b,128) << std::endl;
-	std::cout << callContractFunction("f(fixed,fixed)", fixed(a,128), fixed(b,128)) << std::endl;
-	BOOST_CHECK(callContractFunction("f(fixed,fixed)", fixed(a,128), fixed(b,128)) == encodeArgs(fixed(a,128), fixed(b,128)));
+	//cout << callContractFunction("callFmem()") << endl;
+	cout << callContractFunction("callDataloadB()") << endl;
+	//std::cout << encode(fixed(1, 2, 128)) << std::endl;
+	//std::cout << callContractFunctionWithValue("f(fixed,fixed)", 400, u256(fixed(1, 3, 128)), u256(fixed(1, 2, 128))) << std::endl;
+	//BOOST_CHECK(callContractFunction("f(fixed,fixed)", u256(fixed(1, 3, 128)), u256(fixed(1, 2, 128))) == encodeArgs(fixed(1, 3, 128), fixed(1, 2, 128)));
 }
 
 BOOST_AUTO_TEST_CASE(int_to_fixed_type)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f() returns (ufixed b) {
-				uint128 a = 3;
+			function f(uint128 a) returns (ufixed b) {
 				b = a;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Caling contract fixed type multi return: " << callContractFunction("f()"/*"f(uint128)", byte(0x3)*/) << std::endl;
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("f(uint128)", u256(3)) == encodeArgs(fixed(3, 1, 128)));
 }
 
 BOOST_AUTO_TEST_CASE(boolean_operations_on_fixed_point){
@@ -6968,7 +6987,9 @@ BOOST_AUTO_TEST_CASE(boolean_operations_on_fixed_point){
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling fixed type boolean: " << callContractFunction("greater()") << std::endl;
+	BOOST_CHECK(callContractFunction("greater()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("equal()") == encodeArgs(true));
+	BOOST_CHECK(callContractFunction("lessThan()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_addition)
@@ -6984,27 +7005,29 @@ BOOST_AUTO_TEST_CASE(fixed_type_addition)
 			function complexAdd() returns (fixed) {
 				fixed a = 3.125;
 				ufixed0x8 b = 0.5;
-				return (a + b);
+				ufixed32x32 c = 35.25;
+				return (a + b + c);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling fixed type addition: " << callContractFunction("simpleAdd()") << std::endl;
-	std::cout << "Calling fixed type addition: " << callContractFunction("complexAdd()") << std::endl;
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("simpleAdd()") == encodeArgs(fixed(45, 8, 128)));
+	BOOST_CHECK(callContractFunction("complexAdd()") == encodeArgs(fixed(311, 8, 128)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_subtraction)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function f(fixed a, fixed b) returns (fixed) {
+			function f() returns (fixed) {
+				fixed a = 3.5;
+				fixed b = 32.25;
 				return (a - b);
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(-115, 4, 128)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
@@ -7017,14 +7040,13 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 				return (a * b);
 			}
 			function fullFractionSide() returns (ufixed0x256) {
-				ufixed0x256 a = ufixed0x256(1/3);
-				ufixed0x248 b = ufixed0x248(2/3);
+				ufixed0x256 a = ufixed0x256(2/9);
+				ufixed0x256 b = ufixed0x256(4/5);
 				return a * b;
 			}
 			function largerFractionSide() returns (ufixed32x192) {
 				ufixed32x192 a = ufixed24x184(8 + 1/3);
-				ufixed32x184 b = 3.5;
-				//ufixed24x184 c = ufixed24x184(a);
+				ufixed32x192 b = 3.5;
 				return a * b;
 			}
 			function largerIntSide() returns (ufixed184x32) {
@@ -7040,12 +7062,15 @@ BOOST_AUTO_TEST_CASE(fixed_type_multiplication)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling fixed type multiply: " << callContractFunction("full()") << std::endl;
-	std::cout << "Calling fixed type multiply: " << callContractFunction("fullFractionSide()") << std::endl;
-	std::cout << "Calling fixed type multiply: " << callContractFunction("largerFractionSide()") << std::endl;
-	std::cout << "Calling fixed type multiply: " << callContractFunction("largerIntSide()") << std::endl;
-	std::cout << "Calling fixed type multiply: " << callContractFunction("small()") << std::endl;
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("full()") == encodeArgs(fixed(999, 8, 128)));
+	BOOST_CHECK(callContractFunction("fullFractionSide()") == encodeArgs(fixed(8, 45, 256)));
+	cout << callContractFunction("fullFractionSide()") << endl;
+	cout << encodeArgs(fixed(8, 45, 256)) << endl;
+	BOOST_CHECK(callContractFunction("largerFractionSide()") == encodeArgs(fixed(175, 6, 192)));
+	cout << callContractFunction("largerFractionSide()") << endl;
+	cout << encodeArgs(fixed(175, 6, 192)) << endl;
+	BOOST_CHECK(callContractFunction("largerIntSide()") == encodeArgs(fixed(96028001, 16, 32)));
+	BOOST_CHECK(callContractFunction("small()") == encodeArgs(fixed(4539, 256, 32)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_division)
@@ -7060,8 +7085,7 @@ BOOST_AUTO_TEST_CASE(fixed_type_division)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling fixed type divide: " << callContractFunction("f()") << std::endl;
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(337,4,128)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_modulus)
@@ -7075,28 +7099,36 @@ BOOST_AUTO_TEST_CASE(fixed_type_modulus)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << callContractFunction("f()") << std::endl;
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(fixed(3, 4, 128)));
 }
 
 BOOST_AUTO_TEST_CASE(fixed_type_incrementing_decrementing)
 {
 	char const* sourceCode = R"(
 		contract C {
-			function inc() returns (ufixed) {
+			function incPre() returns (ufixed) {
 				ufixed a = 1.25;
 				return ++a;
 			}
-			function dec() returns (ufixed) {
+			function decPre() returns (ufixed) {
 				ufixed a = 4.5;
 				return --a;
+			}
+			function incPost() returns (ufixed) {
+				ufixed a = 1.25;
+				return a++;
+			}
+			function decPost() returns (ufixed) {
+				ufixed a = 4.5;
+				return a--;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	std::cout << "Calling fixed type addition: " << callContractFunction("inc()") << std::endl;
-	std::cout << "Calling fixed type addition: " << callContractFunction("dec()") << std::endl;
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("incPre()") == encodeArgs(fixed(9, 4, 128)));
+	BOOST_CHECK(callContractFunction("decPre()") == encodeArgs(fixed(7,2,128)));
+	BOOST_CHECK(callContractFunction("incPost()") == encodeArgs(fixed(9, 4, 128)));
+	BOOST_CHECK(callContractFunction("decPost()") == encodeArgs(fixed(7,2,128)));
 }
 
 BOOST_AUTO_TEST_CASE(var_and_fixed_one_third_equivalent)
@@ -7111,7 +7143,7 @@ BOOST_AUTO_TEST_CASE(var_and_fixed_one_third_equivalent)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(true));
 }
 
 BOOST_AUTO_TEST_CASE(for_and_while_loops_with_fixed) 
@@ -7119,19 +7151,23 @@ BOOST_AUTO_TEST_CASE(for_and_while_loops_with_fixed)
 	char const* sourceCode = R"(
 		contract C {
 			function daWhile() returns (fixed) {
-				while (var i = 3.25; i < 500; i++) {
-					return i;
+				var i = 3.25;
+				while ( i < 500) {
+					i++;
 				}
+				return i;
 			}
 			function daFor() returns (fixed) {
-				while (var i = 2.25; i < 500; i++) {
-					return i;
+				for (var i = 2.25; i < 500; i++) {
+					var j = i;
 				}
+				return i;
 			}
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("daWhile()") == encodeArgs(fixed(2013,4,128)));
+	BOOST_CHECK(callContractFunction("daFor()") == encodeArgs(fixed(2009,4,128)));
 }
 
 BOOST_AUTO_TEST_CASE(inline_array_rationals_return)
@@ -7145,7 +7181,7 @@ BOOST_AUTO_TEST_CASE(inline_array_rationals_return)
 		}
 	)";
 	compileAndRun(sourceCode, 0, "C");
-	//BOOST_CHECK();
+	BOOST_CHECK(callContractFunction("f()", u256(2)) == encodeArgs(fixed(5,2,8)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
