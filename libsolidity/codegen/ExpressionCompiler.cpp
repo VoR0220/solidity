@@ -23,6 +23,7 @@
 #include <utility>
 #include <numeric>
 #include <boost/range/adaptor/reversed.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/SHA3.h>
 #include <libsolidity/ast/AST.h>
@@ -30,6 +31,7 @@
 #include <libsolidity/codegen/CompilerContext.h>
 #include <libsolidity/codegen/CompilerUtils.h>
 #include <libsolidity/codegen/LValue.h>
+#include <libsolidity/inlineasm/AsmStack.h>
 #include <libevmasm/GasMeter.h>
 using namespace std;
 
@@ -1372,7 +1374,15 @@ void ExpressionCompiler::appendArithmeticOperatorCode(Token::Value _operator, Ty
 			else if (c_numBits > 128)
 			{
 				//duplicate converted types for reusage
-				m_context << Instruction::DUP1 << Instruction::DUP3;
+				appendInlineAssembly(R"(
+					let A := dup1
+					let B := dup3
+					let AHigh := $mod($fractionShift, A)
+					let BHigh := $mod($fractionShift, B)
+				)", map<string, string>{
+						{"$fractionShift", toString(c_fractionShift)},
+						{"$mod", (c_isSigned ? "mod" : "smod"}
+				});
 				
 				//time to get schwifty in here...
 				//split both numbers into their representative fractional and decimal parts
@@ -1698,6 +1708,19 @@ void ExpressionCompiler::setLValueToStorageItem(Expression const& _expression)
 CompilerUtils ExpressionCompiler::utils()
 {
 	return CompilerUtils(m_context);
+}
+
+void ExpressionCompiler::appendInlineAssembly(string const& _assembly, map<string, string> const& _replacements)
+{
+	if (_replacements.empty())
+		solAssert(assembly::InlineAssemblyStack().parseAndAssemble(_assembly, m_context.nonConstAssembly()), "");
+	else
+	{
+		string assembly = _assembly;
+		for (auto const& replacement: _replacements)
+			assembly = boost::algorithm::replace_all_copy(assembly, replacement.first, replacement.second);
+		solAssert(assembly::InlineAssemblyStack().parseAndAssemble(assembly, m_context.nonConstAssembly()), "");
+	}
 }
 
 }
