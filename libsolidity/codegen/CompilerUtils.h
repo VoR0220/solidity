@@ -168,9 +168,11 @@ private:
 	/// Stack pre: mempos
 	/// Stack post:
 	void storeStringData(bytesConstRef _data);
-
+	/// Helper function for shifting values of fixed points to correct value while changing types eg fixed56x56 -> fixed128x128
+	/// essentially just moving an imaginary decimal point.
+	void convertFixedPointNumber(FixedPointType const& _stackType, FixedPointType const& _targetType);
 	/// Appends code that cleans higher-order bits for integer types.
-	void cleanHigherOrderBits(IntegerType const& _typeOnStack);
+	void cleanHigherOrderBits(Type const& _typeOnStack);
 
 	/// Prepares the given type for storing in memory by shifting it if necessary.
 	unsigned prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const;
