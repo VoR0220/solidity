@@ -228,10 +228,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				m_context
 					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(*m_dataType).numBytes()))
 					<< Instruction::SWAP1 << Instruction::DIV;
-			else if (
-				(m_dataType->category() == Type::Category::Integer && dynamic_cast<IntegerType const&>(*m_dataType).isSigned()) ||
-				(m_dataType->category() == Type::Category::FixedPoint && dynamic_cast<FixedPointType const&>(*m_dataType).isSigned())
-			)
+			else
 				// remove the higher order bits
 				m_context
 					<< (u256(1) << (8 * (32 - m_dataType->storageBytes())))

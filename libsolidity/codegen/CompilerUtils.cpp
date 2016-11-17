@@ -885,18 +885,20 @@ void CompilerUtils::cleanHigherOrderBits(Type const& _typeOnStack)
 void CompilerUtils::convertFixedPointNumber(FixedPointType const& _stackType, FixedPointType const& _targetType)
 {
 	u256 shiftFactor;
-	int difference = _targetType.fractionalBits() - _stackType.fractionalBits();
+	int targetFractionalBits = _targetType.fractionalBits();
+	int stackFractionalBits = _stackType.fractionalBits();
 
-	if (difference > 0)
+	if (stackFractionalBits > targetFractionalBits)
 	{
-		shiftFactor = (u256(1) << (_stackType.fractionalBits() - _targetType.fractionalBits()));
+		shiftFactor = (u256(1) << (stackFractionalBits - targetFractionalBits));
 		m_context << shiftFactor << Instruction::SWAP1 << Instruction::DIV;
 	}
-	else if (difference < 0)
+	else if (stackFractionalBits < targetFractionalBits)
 	{
-		shiftFactor = (u256(1) << (difference));
+		shiftFactor = (u256(1) << (targetFractionalBits - stackFractionalBits));
 		m_context << shiftFactor << Instruction::MUL;
 	}
+
 }
 
 unsigned CompilerUtils::prepareMemoryStore(Type const& _type, bool _padToWordBoundaries) const

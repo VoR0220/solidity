@@ -115,6 +115,13 @@ using string32 = std::array<char, 32>;
 // Null/Invalid values for convenience.
 static const bytes NullBytes;
 
+inline std::string toString(bytes const& _bytes)
+{
+	std::ostringstream ss;
+    std::copy(_bytes.begin(), _bytes.end(), std::ostream_iterator<int>(ss, ","));
+    return ss.str();
+}
+
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
 {
